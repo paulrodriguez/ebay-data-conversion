@@ -1,0 +1,1 @@
+mysql CS144 < queries.sql

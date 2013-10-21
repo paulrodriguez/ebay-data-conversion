@@ -20,11 +20,13 @@ CREATE TABLE IF NOT EXISTS `Items` (
 FOREIGN KEY (Seller) REFERENCES Users(UserID)
 );
 
+
 CREATE TABLE IF NOT EXISTS `Categories`(
 `ItemID` INTEGER REFERENCES `Items`(`ItemID`),
 `Category` VARCHAR(100),
 PRIMARY KEY (`ItemID`, `Category`)
 );
+
 
 CREATE TABLE IF NOT EXISTS `Bids` (
 `ItemID` INTEGER NOT NULL,

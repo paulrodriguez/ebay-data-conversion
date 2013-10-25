@@ -14,11 +14,11 @@ ant run-all
 #soring methods
 sort -u temp_users.csv > users.csv
 sort -u temp_categories.csv > categories.csv
-#sort  -u temp_items.csv > items.csv
+sort  -u temp_items.csv > items.csv
 sort -u temp_bids.csv > bids.csv
 
-mysql CS144 < load.sql
+#mysql CS144 < load.sql
 
-rm -r ./bin
-rm *.csv
-rm *~
+#rm -r ./bin
+#rm *.csv
+#rm *~

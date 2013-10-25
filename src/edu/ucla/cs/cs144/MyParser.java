@@ -159,7 +159,14 @@ class MyParser {
         }
     }
 
+
+    /*
+	Returns a string in format for SQL TIMESTAMP, or throws error if string 
+	cannot be parsed
+
+     */
     static String convertToTimestamp(String time) throws Exception {
+
 	SimpleDateFormat firstformat = new SimpleDateFormat("MMM-dd-yy HH:mm:ss");
 	
 	Date parsed = (Date) firstformat.parse(time);
@@ -193,15 +200,16 @@ class MyParser {
         /* Fill in code here (you will probably need to write auxiliary
             methods). */
 	try {
+	    //open files to output to
 	    PrintWriter tempItems = new PrintWriter(new FileWriter("temp_items.csv",true));
-	    PrintWriter tempUsers = new PrintWriter(new FileWriter("temp_users.csv", true));
-	   
+	    PrintWriter tempUsers = new PrintWriter(new FileWriter("temp_users.csv", true));	   
 	    PrintWriter tempBids = new PrintWriter(new FileWriter("temp_bids.csv",true));
 	    PrintWriter tempCategories = new PrintWriter(new FileWriter("temp_categories.csv", true));
-	    //int i = 1;
+	    
 	    //this is the root of the XML files: 'Items'
 	    Element root = doc.getDocumentElement();
-	    //get the an Item element
+
+	  
 	    //stings that will be used for storing info about items in an Item relation
 	    String itemName = "";
 	    String itemID = "";
@@ -213,6 +221,7 @@ class MyParser {
 	    String itemEnds = "";
 	    String itemDescription = "";
 	    int totalBids = 0;
+	    Element itemSeller = null;
 
 
 	    //these string hold the value of a user
@@ -234,6 +243,9 @@ class MyParser {
 	    String bidderAmount = "";
 	    String bidderTime = "";
 
+	    
+
+	    
 	    //get all Item elements
 	    Element[] eItem = getElementsByTagNameNR(root, "Item");
 	    
@@ -241,11 +253,11 @@ class MyParser {
 	    for (int i = 0; i < eItem.length; i++) {
 		
 		//get the seller's information
-		Element itemSeller = getElementByTagNameNR(eItem[i], "Seller");
-		userID = itemSeller.getAttribute("UserID");
+		itemSeller = getElementByTagNameNR(eItem[i], "Seller");
+		userID = itemSeller.getAttribute("UserID").replaceAll("\"","\\\\\"");
 		rating = itemSeller.getAttribute("Rating");
-		location = getElementTextByTagNameNR(eItem[i],"Location");
-		country = getElementTextByTagNameNR(eItem[i],"Country");
+		location = getElementTextByTagNameNR(eItem[i],"Location").replaceAll("\"","\\\\\"");
+		country = getElementTextByTagNameNR(eItem[i],"Country").replaceAll("\"","\\\\\"");
 		
 
 		//add users to the user load data
@@ -254,7 +266,7 @@ class MyParser {
 		/**************************************************************/
 
 		//get the item info for the Items relation
-		itemName = getElementTextByTagNameNR(eItem[i],"Name");
+		itemName = getElementTextByTagNameNR(eItem[i],"Name").replaceAll("\"","\\\\\"");
 		itemID = eItem[i].getAttribute("ItemID");
 		itemCurr = getElementTextByTagNameNR(eItem[i], "Currently");
 		itemBuyPrice = getElementTextByTagNameNR(eItem[i], "Buy_Price");
@@ -262,9 +274,11 @@ class MyParser {
 		itemTotalBids = getElementTextByTagNameNR(eItem[i], "Number_of_Bids");
 		itemStarted = convertToTimestamp(getElementTextByTagNameNR(eItem[i], "Started"));
 		itemEnds = convertToTimestamp(getElementTextByTagNameNR(eItem[i],"Ends"));
-		itemDescription = getElementTextByTagNameNR(eItem[i],"Description");
+		itemDescription = getElementTextByTagNameNR(eItem[i],"Description").replaceAll("\\\\","\\\\\\\\").replaceAll("\"", "\\\\\"");
 		bids = getElementByTagNameNR(eItem[i], "Bids");
+		//need this when we are going to get the bids
 		totalBids = Integer.parseInt(itemTotalBids);
+
 		//if buy price is empty put a null value in the file
 		if (itemBuyPrice.equals("")) {
 		    itemBuyPrice = "NULL";
@@ -272,31 +286,37 @@ class MyParser {
 		else {
 		    itemBuyPrice = strip(itemBuyPrice);
 		}
+
 		if (itemDescription.length() > 4000) {
-		    itemDescription=itemDescription.substring(0,4000);
+		    itemDescription = itemDescription.substring(0,4000);
 		}
 
 		//append the items info to the csv file
-		tempItems.append(itemID+",\""+itemName.replaceAll("\"","\\\\\"")+"\","+strip(itemCurr)+","+itemBuyPrice+","+strip(itemFirstBid)+","+itemTotalBids+","+itemStarted+","+itemEnds+",\""+userID+"\",\""+itemDescription.replaceAll("\"","\\\\\"")+"\"\n");
+		tempItems.append(itemID+",\""+itemName+"\","+strip(itemCurr)+","+itemBuyPrice+","+strip(itemFirstBid)+","+itemTotalBids+","+itemStarted+","+itemEnds+",\""+userID+"\",\""+itemDescription+"\"\n");
 
 
 		/***********************************************************/
 		//get the categories for this element
 		Element [] categories = getElementsByTagNameNR(eItem[i], "Category");
+		
 		//need to loop through each category element found
-		for (int k = 0; k<categories.length;k++) {
-		    category = getElementText(categories[k]);
+		for (int k = 0; k < categories.length; k++) {
+		    category = getElementText(categories[k]).replaceAll("\"","\\\\\"");
+
 		    tempCategories.append(itemID+",\""+category+"\"\n");
 		}
+
+
+		/***************************************************/
 		//need to obtain info of each bidder if the number of bids is 1 or greater
 		if (totalBids >= 1) {
 		    Element[] bid = getElementsByTagNameNR(bids, "Bid");
 		    for (int j = 0; j < bid.length; j++) {
 			bidder = getElementByTagNameNR(bid[j],"Bidder");
-			bidderID = bidder.getAttribute("UserID");
+			bidderID = bidder.getAttribute("UserID").replaceAll("\"","\\\\\"");
 			bidderRating = bidder.getAttribute("Rating");
-			bidderLoc = getElementTextByTagNameNR(bidder, "Location");
-			bidderCountry = getElementTextByTagNameNR(bidder, "Country");
+			bidderLoc = getElementTextByTagNameNR(bidder, "Location").replaceAll("\"","\\\\\"");
+			bidderCountry = getElementTextByTagNameNR(bidder, "Country").replaceAll("\"","\\\\\"");
 
 			bidderTime = convertToTimestamp(getElementTextByTagNameNR(bid[j], "Time"));
 			bidderAmount = getElementTextByTagNameNR(bid[j],"Amount");

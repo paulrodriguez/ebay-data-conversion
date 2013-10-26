@@ -5,40 +5,37 @@ project 2
 tables:
 
 Users(
-UserID VARCHAR(100) PRIMARY KEY,
-Rating INTEGER,
-Location, VARCHAR(100),
-Country VARCHAR(100)
+UserID PRIMARY KEY,
+Rating,
+Location,
+Country
 )
 
 Items(
-ItemID INTEGER PRIMARY KEY,
-Name VARCHAR(100),
-Currently DECIMAL(8,2),
-Buy_Price DECIMAL(8,2) DEFAULT NULL,
-First_Bid DECIMAL(8,2),
-Number_of_Bids INTEGER,
-Started TIMESTAMP,
-Ends TIMESTAMP,
-Seller VARCHAR(100),
-Description VARCHAR(4000),
-FOREIGN KEY (Seller) REFERENCES Users(UserID)
+ItemID PRIMARY KEY,
+Name,
+Currently,
+Buy_Price,
+First_Bid,
+Number_of_Bids,
+Started,
+Ends,
+Seller,
+Description,
 )
 
 Categories(
-ItemID INTEGER REFERENCES Items(ItemID),
-Category VARCHAR(100),
+ItemID,
+Category,
 PRIMARY KEY (ItemID, Category)
 )
 
 Bids(
-ItemID INTEGER NOT NULL,
-UserID VARCHAR(100) NOT NULL,
-BidTime TIMESTAMP NOT NULL,
-Amount DECIMAL(8,2) NOT NULL
+ItemID,
+UserID,
+BidTime,
+Amount,
 PRIMARY KEY (ItemID, UserID, BidTime),
-FOREIGN KEY (ItemID) REFERENCES Item(ItemID),
-FOREIGN KEY (UserID) REFERENCES Users(UserID)
 )
 
 non-trivial functional dependencies:

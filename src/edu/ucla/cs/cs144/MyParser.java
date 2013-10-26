@@ -201,10 +201,10 @@ class MyParser {
             methods). */
 	try {
 	    //open files to output to
-	    PrintWriter tempItems = new PrintWriter(new FileWriter("temp_items.csv",true));
-	    PrintWriter tempUsers = new PrintWriter(new FileWriter("temp_users.csv", true));	   
-	    PrintWriter tempBids = new PrintWriter(new FileWriter("temp_bids.csv",true));
-	    PrintWriter tempCategories = new PrintWriter(new FileWriter("temp_categories.csv", true));
+	    PrintWriter tempItems = new PrintWriter(new FileWriter("temp_items.txt",true));
+	    PrintWriter tempUsers = new PrintWriter(new FileWriter("temp_users.txt", true));	   
+	    PrintWriter tempBids = new PrintWriter(new FileWriter("temp_bids.txt",true));
+	    PrintWriter tempCategories = new PrintWriter(new FileWriter("temp_categories.txt", true));
 	    
 	    //this is the root of the XML files: 'Items'
 	    Element root = doc.getDocumentElement();
@@ -254,45 +254,46 @@ class MyParser {
 		
 		//get the seller's information
 		itemSeller = getElementByTagNameNR(eItem[i], "Seller");
-		userID = itemSeller.getAttribute("UserID").replaceAll("\"","\\\\\"");
+		userID = itemSeller.getAttribute("UserID");
 		rating = itemSeller.getAttribute("Rating");
-		location = getElementTextByTagNameNR(eItem[i],"Location").replaceAll("\"","\\\\\"");
-		country = getElementTextByTagNameNR(eItem[i],"Country").replaceAll("\"","\\\\\"");
+		location = getElementTextByTagNameNR(eItem[i],"Location");
+		country = getElementTextByTagNameNR(eItem[i],"Country");
 		
 
 		//add users to the user load data
-		tempUsers.append("\""+userID+"\","+rating+",\""+location+"\",\""+country+"\"\n");
+		tempUsers.append(""+userID+"|*|"+rating+"|*|"+location+"|*|"+country+"\n");
 
 		/**************************************************************/
 
 		//get the item info for the Items relation
-		itemName = getElementTextByTagNameNR(eItem[i],"Name").replaceAll("\"","\\\\\"");
+		itemName = getElementTextByTagNameNR(eItem[i],"Name");
 		itemID = eItem[i].getAttribute("ItemID");
 		itemCurr = getElementTextByTagNameNR(eItem[i], "Currently");
-		itemBuyPrice = getElementTextByTagNameNR(eItem[i], "Buy_Price");
+		itemBuyPrice = strip(getElementTextByTagNameNR(eItem[i], "Buy_Price"));
 		itemFirstBid = getElementTextByTagNameNR(eItem[i], "First_Bid");
 		itemTotalBids = getElementTextByTagNameNR(eItem[i], "Number_of_Bids");
 		itemStarted = convertToTimestamp(getElementTextByTagNameNR(eItem[i], "Started"));
 		itemEnds = convertToTimestamp(getElementTextByTagNameNR(eItem[i],"Ends"));
-		itemDescription = getElementTextByTagNameNR(eItem[i],"Description").replaceAll("\\\\","\\\\\\\\").replaceAll("\"", "\\\\\"");
+		itemDescription = getElementTextByTagNameNR(eItem[i],"Description");
 		bids = getElementByTagNameNR(eItem[i], "Bids");
 		//need this when we are going to get the bids
 		totalBids = Integer.parseInt(itemTotalBids);
 
 		//if buy price is empty put a null value in the file
-		if (itemBuyPrice.equals("")) {
-		    itemBuyPrice = "NULL";
-		}
+		/*if (itemBuyPrice.equals("")) {
+		    itemBuyPrice = "0.00";
+		}/*
 		else {
 		    itemBuyPrice = strip(itemBuyPrice);
-		}
+		}*/
 
 		if (itemDescription.length() > 4000) {
 		    itemDescription = itemDescription.substring(0,4000);
 		}
 
+		tempItems.append(itemID+"|*|"+itemName+"|*|"+strip(itemCurr)+"|*|"+itemBuyPrice+"|*|"+strip(itemFirstBid)+"|*|"+itemTotalBids+"|*|"+itemStarted+"|*|"+itemEnds+"|*|"+userID+"|*|"+itemDescription+"\n");
 		//append the items info to the csv file
-		tempItems.append(itemID+",\""+itemName+"\","+strip(itemCurr)+","+itemBuyPrice+","+strip(itemFirstBid)+","+itemTotalBids+","+itemStarted+","+itemEnds+",\""+userID+"\",\""+itemDescription+"\"\n");
+		//tempItems.append(itemID+",\""+itemName+"\","+strip(itemCurr)+","+itemBuyPrice+","+strip(itemFirstBid)+","+itemTotalBids+","+itemStarted+","+itemEnds+",\""+userID+"\",\""+itemDescription+"\"\n");
 
 
 		/***********************************************************/
@@ -301,9 +302,9 @@ class MyParser {
 		
 		//need to loop through each category element found
 		for (int k = 0; k < categories.length; k++) {
-		    category = getElementText(categories[k]).replaceAll("\"","\\\\\"");
+		    category = getElementText(categories[k]);
 
-		    tempCategories.append(itemID+",\""+category+"\"\n");
+		    tempCategories.append(itemID+"|*|"+category+"\n");
 		}
 
 
@@ -313,18 +314,18 @@ class MyParser {
 		    Element[] bid = getElementsByTagNameNR(bids, "Bid");
 		    for (int j = 0; j < bid.length; j++) {
 			bidder = getElementByTagNameNR(bid[j],"Bidder");
-			bidderID = bidder.getAttribute("UserID").replaceAll("\"","\\\\\"");
+			bidderID = bidder.getAttribute("UserID");
 			bidderRating = bidder.getAttribute("Rating");
-			bidderLoc = getElementTextByTagNameNR(bidder, "Location").replaceAll("\"","\\\\\"");
-			bidderCountry = getElementTextByTagNameNR(bidder, "Country").replaceAll("\"","\\\\\"");
+			bidderLoc = getElementTextByTagNameNR(bidder, "Location");
+			bidderCountry = getElementTextByTagNameNR(bidder, "Country");
 
 			bidderTime = convertToTimestamp(getElementTextByTagNameNR(bid[j], "Time"));
 			bidderAmount = getElementTextByTagNameNR(bid[j],"Amount");
 			//append bidder info to users file
-			tempUsers.append("\""+bidderID+"\","+bidderRating+",\""+bidderLoc+"\",\""+bidderCountry+"\"\n");
+			tempUsers.append(bidderID+"|*|"+bidderRating+"|*|"+bidderLoc+"|*|"+bidderCountry+"\n");
 
 			//append the bid info to the bids file
-			tempBids.append(itemID+",\""+bidderID+"\","+bidderTime+","+strip(bidderAmount)+"\n");
+			tempBids.append(itemID+"|*|"+bidderID+"|*|"+bidderTime+"|*|"+strip(bidderAmount)+"\n");
 		    }
 		}
 	       
